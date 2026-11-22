@@ -146,29 +146,36 @@ func Dir(c Config) string {
 	return fmt.Sprintf("output/%s/%s/%s/", c.Name, c.Tag, mode)
 }
 
+// RunExamples answers the given examples, writes <task>.jsonl and returns the summary.
+func RunExamples(c Config, task string, examples []dataset.Example) Summary {
+	ctx := context.Background()
+	ask := Ask
+	if c.Ask != nil {
+		ask = c.Ask
+	}
+	start := time.Now()
+	rows := run.Map(examples, c.Workers, func(_ int, e dataset.Example) Row { return ask(ctx, c, e) })
+	s := Summarize(c, task, rows, time.Since(start))
+	fmt.Printf("%-12s %-10s %-22s think=%-5v n=%d score=%.3f latency=%.1fs reasoning=%.0f tok/s=%.1f throughput=%.0f errors=%d truncated=%d (%.0fs)\n",
+		c.Name, c.Tag, task, c.Think, s.N, s.Score, s.Latency.Mean, s.ReasoningTokens.Mean, s.TokensPerSecond.Mean, s.Throughput, s.Errors, s.Truncated, s.WallSeconds)
+	if err := output.JSONL(Dir(c)+task+".jsonl", rows); err != nil {
+		log.Fatal(err)
+	}
+	if err := output.JSON(Dir(c)+task+".summary.json", s); err != nil {
+		log.Fatal(err)
+	}
+	return s
+}
+
 // Run executes every task, writes <task>.jsonl and summary.json, and returns the summaries.
 func Run(c Config) []Summary {
-	ctx := context.Background()
 	var summaries []Summary
 	for _, task := range c.Tasks {
 		examples, err := dataset.Load(task)
 		if err != nil {
 			log.Fatal(err)
 		}
-		examples = dataset.Sample(examples, c.N, c.Seed)
-		start := time.Now()
-		ask := Ask
-		if c.Ask != nil {
-			ask = c.Ask
-		}
-		rows := run.Map(examples, c.Workers, func(_ int, e dataset.Example) Row { return ask(ctx, c, e) })
-		s := Summarize(c, task, rows, time.Since(start))
-		summaries = append(summaries, s)
-		fmt.Printf("%-12s %-10s %-22s think=%-5v n=%d score=%.3f latency=%.1fs reasoning=%.0f tok/s=%.1f throughput=%.0f errors=%d truncated=%d (%.0fs)\n",
-			c.Name, c.Tag, task, c.Think, s.N, s.Score, s.Latency.Mean, s.ReasoningTokens.Mean, s.TokensPerSecond.Mean, s.Throughput, s.Errors, s.Truncated, s.WallSeconds)
-		if err := output.JSONL(Dir(c)+task+".jsonl", rows); err != nil {
-			log.Fatal(err)
-		}
+		summaries = append(summaries, RunExamples(c, task, dataset.Sample(examples, c.N, c.Seed)))
 		if err := output.JSON(Dir(c)+"summary.json", summaries); err != nil {
 			log.Fatal(err)
 		}

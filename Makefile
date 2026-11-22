@@ -185,3 +185,21 @@ bench-cascade: build ## cheap model first, strong model (baseline answers) on lo
 
 .PHONY: bench-gpu
 bench-gpu: bench-prefixcache bench-specdecode bench-kvcachequant bench-cascade bench-thinkingbudget bench-quantization ## all GPU benchmarks after the baseline, in order
+
+.PHONY: bench-tracecompress bench-promptcompress
+bench-tracecompress: build ## how much of a reasoning trace must be kept for it to stay useful
+	$(MAKE) --no-print-directory up SERVICES="llm llm2" MODEL=$(REF) NP=16 CTX=131072 MODEL2=Qwen3-1.7B-Q8_0.gguf
+	./bin/tracecompress -workers 16 -max-tokens 1024
+
+bench-promptcompress: build ## extractive and small-LLM context compression on long-context QA
+	$(MAKE) --no-print-directory up SERVICES="llm llm2 embed" MODEL=$(REF) NP=4 CTX=131072 MODEL2=Qwen3-1.7B-Q8_0.gguf NP2=2 CTX2=65536
+	./bin/promptcompress -workers 4 -n 50 -max-tokens 64
+
+.PHONY: bench-cachehint
+bench-cachehint: build ## cached neighbour used as an in-context hint and as a speculative draft
+	$(MAKE) --no-print-directory up SERVICES="llm embed" MODEL=$(REF) NP=16 CTX=131072
+	./bin/cachehint -tag plain -workers 16
+	$(MAKE) --no-print-directory up SERVICES="llm embed" MODEL=$(REF) NP=1 CTX=16384
+	./bin/cachehint -tag plain-1slot -workers 1 -n 40 -tasks gsm8k -modes nohint-nothink,hint-qa-nothink
+	$(MAKE) --no-print-directory up SERVICES="llm embed" MODEL=$(REF) NP=1 CTX=16384 EXTRA="--spec-type ngram-simple --spec-ngram-simple-size-n 4 --spec-ngram-simple-size-m 32"
+	./bin/cachehint -tag ngram-1slot -workers 1 -n 40 -tasks gsm8k -modes nohint-nothink,hint-qa-nothink
