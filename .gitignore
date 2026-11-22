@@ -1,0 +1,8 @@
+datasets/
+models/
+slots/
+logs/
+bin/
+# per-request data is large; summaries are committed
+output/**/*.jsonl
+output/baseline/plumbing/
