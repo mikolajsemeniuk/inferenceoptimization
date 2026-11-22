@@ -31,6 +31,8 @@ type Config struct {
 	Think     bool
 	Seed      uint64
 	Extra     map[string]any // extra request options
+	// Ask overrides how one example is answered (nil = a single plain request, see Ask).
+	Ask func(context.Context, Config, dataset.Example) Row
 }
 
 // Flags reads the common command line flags, starting from the given defaults.
@@ -57,6 +59,10 @@ type Row struct {
 	Think bool    `json:"think"`
 	Score float64 `json:"score"`
 	Error string  `json:"error,omitempty"`
+	// Extra calls made before the answer (router, budget estimate, ...): their cost.
+	OverheadSeconds float64 `json:"overhead_s"`
+	OverheadTokens  int     `json:"overhead_tokens"`
+	Note            string  `json:"note,omitempty"` // method-specific decision, e.g. the chosen budget
 	llm.Response
 }
 
@@ -97,6 +103,9 @@ type Summary struct {
 	ReasoningTokens  metrics.Summary `json:"reasoning_tokens"`
 	CachedTokens     metrics.Summary `json:"cached_tokens"`
 	DraftAcceptance  float64         `json:"draft_acceptance"` // accepted / drafted tokens
+	OverheadSeconds  metrics.Summary `json:"overhead_s"`       // extra calls before the answer
+	OverheadTokens   metrics.Summary `json:"overhead_tokens"`
+	TotalSeconds     metrics.Summary `json:"total_s"` // latency + overhead
 }
 
 // Summarize builds the Summary of one task's rows.
@@ -114,7 +123,8 @@ func Summarize(c Config, task string, rows []Row, wall time.Duration) Summary {
 		}
 		drafted, accepted = drafted+r.DraftTokens, accepted+r.DraftAccepted
 		for k, v := range map[string]float64{"score": r.Score, "latency": r.Latency, "ttft": r.TTFT, "prompt_s": r.PromptSeconds, "tps": r.TokensPerSecond,
-			"prompt": float64(r.PromptTokens), "completion": float64(r.CompletionTokens), "reasoning": float64(r.ReasoningTokens), "cached": float64(r.CachedTokens)} {
+			"prompt": float64(r.PromptTokens), "completion": float64(r.CompletionTokens), "reasoning": float64(r.ReasoningTokens), "cached": float64(r.CachedTokens),
+			"overhead_s": r.OverheadSeconds, "overhead_tokens": float64(r.OverheadTokens), "total_s": r.Latency + r.OverheadSeconds} {
 			col[k] = append(col[k], v)
 		}
 	}
@@ -122,6 +132,7 @@ func Summarize(c Config, task string, rows []Row, wall time.Duration) Summary {
 	s.Throughput = metrics.Sum(col["completion"]) / wall.Seconds()
 	s.Latency, s.TTFT, s.PromptSeconds, s.TokensPerSecond = metrics.Summarize(col["latency"]), metrics.Summarize(col["ttft"]), metrics.Summarize(col["prompt_s"]), metrics.Summarize(col["tps"])
 	s.PromptTokens, s.CompletionTokens, s.ReasoningTokens, s.CachedTokens = metrics.Summarize(col["prompt"]), metrics.Summarize(col["completion"]), metrics.Summarize(col["reasoning"]), metrics.Summarize(col["cached"])
+	s.OverheadSeconds, s.OverheadTokens, s.TotalSeconds = metrics.Summarize(col["overhead_s"]), metrics.Summarize(col["overhead_tokens"]), metrics.Summarize(col["total_s"])
 	s.DraftAcceptance = metrics.Rate(accepted, drafted)
 	return s
 }
@@ -146,7 +157,11 @@ func Run(c Config) []Summary {
 		}
 		examples = dataset.Sample(examples, c.N, c.Seed)
 		start := time.Now()
-		rows := run.Map(examples, c.Workers, func(_ int, e dataset.Example) Row { return Ask(ctx, c, e) })
+		ask := Ask
+		if c.Ask != nil {
+			ask = c.Ask
+		}
+		rows := run.Map(examples, c.Workers, func(_ int, e dataset.Example) Row { return ask(ctx, c, e) })
 		s := Summarize(c, task, rows, time.Since(start))
 		summaries = append(summaries, s)
 		fmt.Printf("%-12s %-10s %-22s think=%-5v n=%d score=%.3f latency=%.1fs reasoning=%.0f tok/s=%.1f throughput=%.0f errors=%d truncated=%d (%.0fs)\n",

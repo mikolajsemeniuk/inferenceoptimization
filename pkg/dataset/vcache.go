@@ -19,6 +19,14 @@ type lmArena struct {
 	Response string `parquet:"response_gpt-4o-mini"`
 }
 
+type lmArenaOpenAI struct {
+	ID       int64  `parquet:"id"`
+	Prompt   string `parquet:"prompt"`
+	Class    int64  `parquet:"ID_Set"`
+	Emb      string `parquet:"emb_text-embedding-3-small"`
+	Response string `parquet:"response_gpt-4o-mini"`
+}
+
 type classification struct {
 	ID       int64  `parquet:"id"`
 	Prompt   string `parquet:"prompt"`
@@ -45,13 +53,21 @@ func embedding(s string) []float32 {
 	return vector.Normalize(v)
 }
 
-// VCache loads one of the vCache benchmarks: "lmarena", "classification" or "search".
+// VCache loads one of the vCache benchmarks: "lmarena", "classification" or "search"
+// (GTE embeddings, 1024 dimensions), or "lmarena-openai" (text-embedding-3-small, 1536
+// dimensions, Matryoshka-trained so it can be truncated).
 // Class is -1 for "classification", where correctness is judged by comparing responses.
 func VCache(name string) ([]semanticcache.Query, error) {
 	var out []semanticcache.Query
 	switch name {
 	case "lmarena":
 		rows, err := Parquet[lmArena](Root + "vCache/SemBenchmarkLmArena/train.parquet")
+		for _, r := range rows {
+			out = append(out, semanticcache.Query{ID: int(r.ID), Prompt: r.Prompt, Vec: embedding(r.Emb), Class: int(r.Class), Response: r.Response})
+		}
+		return out, err
+	case "lmarena-openai":
+		rows, err := Parquet[lmArenaOpenAI](Root + "vCache/SemBenchmarkLmArena/train.parquet")
 		for _, r := range rows {
 			out = append(out, semanticcache.Query{ID: int(r.ID), Prompt: r.Prompt, Vec: embedding(r.Emb), Class: int(r.Class), Response: r.Response})
 		}

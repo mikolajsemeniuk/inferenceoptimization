@@ -70,10 +70,18 @@ type chunk struct {
 	} `json:"timings"`
 }
 
-// Think returns the Extra option that switches thinking on or off (Qwen3-style templates).
+// Think returns the Extra options that switch thinking on or off (Qwen3-style templates).
+// Thinking uses the sampling settings recommended for Qwen3 (greedy decoding makes it loop);
+// without thinking decoding is greedy, so results are repeatable.
 func Think(on bool) map[string]any {
-	return map[string]any{"chat_template_kwargs": map[string]any{"enable_thinking": on}}
+	if on {
+		return map[string]any{"chat_template_kwargs": map[string]any{"enable_thinking": true}, "temperature": 0.6, "top_p": 0.95, "top_k": 20}
+	}
+	return map[string]any{"chat_template_kwargs": map[string]any{"enable_thinking": false}, "temperature": 0}
 }
+
+// Budget returns the Extra option that caps thinking at n tokens.
+func Budget(n int) map[string]any { return map[string]any{"thinking_budget_tokens": n} }
 
 // User builds a single-turn conversation.
 func User(prompt string) []Message { return []Message{{"user", prompt}} }
@@ -167,7 +175,8 @@ func Tokens(ctx context.Context, base, text string) (int, error) {
 	var out struct {
 		Tokens []int `json:"tokens"`
 	}
-	return len(out.Tokens), json.NewDecoder(res.Body).Decode(&out)
+	err = json.NewDecoder(res.Body).Decode(&out)
+	return len(out.Tokens), err
 }
 
 // Embed returns unit-length embeddings for the texts from an embedding server.

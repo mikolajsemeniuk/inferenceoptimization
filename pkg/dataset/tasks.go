@@ -58,6 +58,19 @@ func MathEqual(a, b string) bool {
 	return clean(a) != "" && clean(a) == clean(b)
 }
 
+// Extract pulls the short final answer out of the model output (used to compare two outputs).
+func Extract(e Example, output string) string {
+	switch e.Kind {
+	case "number":
+		return metrics.LastNumber(output)
+	case "choice":
+		return metrics.Choice(output)
+	case "math":
+		return mathNoise.Replace(Boxed(output))
+	}
+	return metrics.Normalize(output)
+}
+
 // Grade scores the model output for the example in [0,1].
 func Grade(e Example, output string) float64 {
 	hit := func(ok bool) float64 {

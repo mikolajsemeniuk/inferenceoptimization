@@ -61,3 +61,127 @@ datasets-all: datasets datasets-large
 
 datasets-check: ## list downloaded dataset files
 	@find $(DS) -type f \( -name '*.parquet' -o -name '*.jsonl' \) | sort | xargs du -h
+
+# ---------------------------------------------------------------- infrastructure
+# Servers: llm :8101 (MODEL, CTX, NP, EXTRA), llm2 :8102 (MODEL2, ...), embed :8103.
+#   make up MODEL=Qwen3-8B-Q4_K_M.gguf EXTRA="-ctk q8_0 -ctv q8_0"
+SERVICES ?= llm
+export UID_GID := $(shell id -u):$(shell id -g)
+
+.PHONY: image up down ready
+image: ## build the llama.cpp server image
+	docker compose build llm
+
+up: ## start SERVICES and wait until they answer
+	@mkdir -p slots
+	docker compose up -d --force-recreate $(SERVICES)
+	@$(MAKE) --no-print-directory ready
+
+down: ## stop all servers
+	docker compose down
+
+ready: ## wait for /health of every running server, then send one real request
+	@for s in $(SERVICES); do \
+		case $$s in llm) p=8101;; llm2) p=8102;; embed) p=8103;; esac; \
+		printf "waiting for $$s on :$$p "; \
+		for i in `seq 300`; do curl -sf localhost:$$p/health >/dev/null && break; printf .; sleep 1; done; \
+		curl -sf localhost:$$p/health >/dev/null || { echo " NOT READY"; docker compose logs --tail 20 $$s; exit 1; }; \
+		if [ $$s = embed ]; then \
+			curl -sf localhost:$$p/v1/embeddings -d '{"input":"ping"}' | grep -q embedding && echo " ok"; \
+		else \
+			curl -sf localhost:$$p/v1/chat/completions -d '{"messages":[{"role":"user","content":"ping"}],"max_tokens":1}' | grep -q choices && echo " ok"; \
+		fi || { echo " REQUEST FAILED"; exit 1; }; \
+	done
+
+# ---------------------------------------------------------------- benchmarks
+# Each target writes output/<name>/... ; long runs: nohup make bench-<name> > logs/<name>.log 2>&1 &
+CACHE_SETS ?= lmarena classification search
+
+.PHONY: build bench-semanticcache bench-vcache
+build:
+	go build -o bin/ ./cmd/...
+
+bench-semanticcache: build ## static-threshold semantic cache on the vCache benchmarks (no LLM needed)
+	@for d in $(CACHE_SETS); do ./bin/semanticcache -dataset $$d || exit 1; done
+
+bench-vcache: build ## vCache policy on the vCache benchmarks (no LLM needed)
+	@for d in $(CACHE_SETS); do ./bin/vcache -dataset $$d || exit 1; done
+
+REASONING := gsm8k,math500,mmlu,mmlupro
+LONG      := longbench-hotpotqa,longbench-2wikimqa,longbench-musique
+REF       := Qwen3-8B-Q8_0.gguf
+
+.PHONY: bench-baseline
+bench-baseline: build ## reference model without any optimization, thinking on and off
+	$(MAKE) up MODEL=$(REF) NP=16 CTX=131072
+	./bin/baseline -tag Q8_0 -workers 16 -think=true -tasks $(REASONING)
+	./bin/baseline -tag Q8_0 -workers 16 -think=false -tasks $(REASONING),cnndm
+	$(MAKE) up MODEL=$(REF) NP=4 CTX=131072
+	./bin/baseline -tag Q8_0-long -workers 4 -n 50 -think=false -tasks $(LONG)
+
+# serverinfo <benchmark> <tag>: store GPU memory of the running server next to the results
+define serverinfo
+	@mkdir -p output/$(1)/$(2)
+	@nvidia-smi --query-compute-apps=process_name,used_memory --format=csv,noheader,nounits | grep /app/llama-server | \
+		awk -F', ' '{s=s sep $$2; sep=","} END {print "{\"benchmark\":\"$(1)\",\"tag\":\"$(2)\",\"gpu_memory_mib\":[" s "]}"}' > output/$(1)/$(2)/server.json
+	@cat output/$(1)/$(2)/server.json
+endef
+
+QUANTS ?= Q6_K Q4_K_M Q3_K_M Q2_K
+.PHONY: bench-quantization
+bench-quantization: build ## Qwen3-8B at lower GGUF precisions (Q8_0 is the baseline)
+	@for q in $(QUANTS); do \
+		$(MAKE) --no-print-directory up MODEL=Qwen3-8B-$$q.gguf NP=16 CTX=131072 || exit 1; \
+		./bin/quantization -tag $$q -workers 16 -think=false || exit 1; \
+		./bin/quantization -tag $$q -workers 16 -think=true -n 150 -tasks gsm8k,mmlupro || exit 1; \
+		$(MAKE) --no-print-directory info NAME=quantization TAG=$$q; \
+	done
+
+KVTYPES ?= f16 q8_0 q4_0
+.PHONY: bench-kvcachequant
+bench-kvcachequant: build ## KV cache stored as f16 / q8_0 / q4_0, long-context tasks
+	@for t in $(KVTYPES); do \
+		$(MAKE) --no-print-directory up MODEL=$(REF) NP=4 CTX=131072 EXTRA="-ctk $$t -ctv $$t" || exit 1; \
+		./bin/kvcachequant -tag $$t -workers 4 -n 50 || exit 1; \
+		./bin/kvcachequant -tag $$t -workers 4 -n 100 -tasks gsm8k,mmlu || exit 1; \
+		$(MAKE) --no-print-directory info NAME=kvcachequant TAG=$$t; \
+	done
+
+.PHONY: info
+info:
+	$(call serverinfo,$(NAME),$(TAG))
+
+# speculative decoding configurations: <tag>|<server flags>
+SPEC := none| \
+	draft0.6B-n8|-md_/models/Qwen3-0.6B-Q8_0.gguf_--spec-type_draft-simple_--spec-draft-n-max_8 \
+	draft0.6B-n16|-md_/models/Qwen3-0.6B-Q8_0.gguf_--spec-type_draft-simple_--spec-draft-n-max_16 \
+	draft1.7B-n8|-md_/models/Qwen3-1.7B-Q8_0.gguf_--spec-type_draft-simple_--spec-draft-n-max_8 \
+	draft1.7B-n16|-md_/models/Qwen3-1.7B-Q8_0.gguf_--spec-type_draft-simple_--spec-draft-n-max_16 \
+	ngram-simple|--spec-type_ngram-simple
+.PHONY: bench-specdecode
+bench-specdecode: build ## draft-model and n-gram speculative decoding, one request at a time
+	@for s in $(SPEC); do \
+		tag=`echo $$s | cut -d'|' -f1`; flags=`echo $$s | cut -d'|' -f2 | tr _ ' '`; \
+		$(MAKE) --no-print-directory up MODEL=$(REF) NP=1 CTX=16384 EXTRA="$$flags" || exit 1; \
+		./bin/specdecode -tag $$tag -workers 1 -n 40 -max-tokens 512 -think=false || exit 1; \
+		./bin/specdecode -tag $$tag -workers 1 -n 15 -max-tokens 2048 -think=true -tasks gsm8k || exit 1; \
+		$(MAKE) --no-print-directory info NAME=specdecode TAG=$$tag; \
+	done
+
+.PHONY: bench-prefixcache
+bench-prefixcache: build ## prompt prefix reuse in memory and from disk
+	$(MAKE) --no-print-directory up MODEL=$(REF) NP=1 CTX=32768
+	./bin/prefixcache
+
+.PHONY: bench-thinkingbudget
+bench-thinkingbudget: build ## fixed budgets, self-estimated budget, small-model router
+	$(MAKE) --no-print-directory up SERVICES="llm llm2" MODEL=$(REF) NP=16 CTX=131072 MODEL2=Qwen3-1.7B-Q8_0.gguf
+	./bin/thinkingbudget -workers 16
+
+CHEAP ?= Qwen3-8B-Q3_K_M Qwen3-1.7B-Q8_0
+.PHONY: bench-cascade
+bench-cascade: build ## cheap model first, strong model (baseline answers) on low confidence
+	@for m in $(CHEAP); do \
+		$(MAKE) --no-print-directory up SERVICES=llm2 MODEL2=$$m.gguf NP2=16 CTX2=65536 || exit 1; \
+		./bin/cascade -tag $$m -workers 16 || exit 1; \
+	done
