@@ -27,10 +27,10 @@ services:
   llm2:
     <<: *llama
     ports: ["8102:8080"]
-    volumes: ["./models:/models:ro"]
+    volumes: ["./models:/models:ro", "./slots:/slots"]
     command: >
       -m /models/${MODEL2:-Qwen3-1.7B-Q8_0.gguf} -ngl 99 -c ${CTX2:-32768} -np ${NP2:-8}
-      --metrics ${EXTRA2:-}
+      --slot-save-path /slots --metrics ${EXTRA2:-}
 
   # embedding model
   embed:

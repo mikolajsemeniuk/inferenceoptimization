@@ -151,17 +151,14 @@ bench-kvcachequant: build ## KV cache stored as f16 / q8_0 / q4_0, long-context 
 info:
 	$(call serverinfo,$(NAME),$(TAG))
 
-# speculative decoding configurations: <tag>|<server flags>
-SPEC := none| \
-	draft0.6B-n8|-md_/models/Qwen3-0.6B-Q8_0.gguf_--spec-type_draft-simple_--spec-draft-n-max_8 \
-	draft0.6B-n16|-md_/models/Qwen3-0.6B-Q8_0.gguf_--spec-type_draft-simple_--spec-draft-n-max_16 \
-	draft1.7B-n8|-md_/models/Qwen3-1.7B-Q8_0.gguf_--spec-type_draft-simple_--spec-draft-n-max_8 \
-	draft1.7B-n16|-md_/models/Qwen3-1.7B-Q8_0.gguf_--spec-type_draft-simple_--spec-draft-n-max_16 \
-	ngram-simple|--spec-type_ngram-simple
+# speculative decoding configurations: <tag>@<server flags, + instead of spaces>
+D06 := -md+/models/Qwen3-0.6B-Q8_0.gguf+--spec-type+draft-simple+--spec-draft-n-max
+D17 := -md+/models/Qwen3-1.7B-Q8_0.gguf+--spec-type+draft-simple+--spec-draft-n-max
+SPEC := none@ draft0.6B-n8@$(D06)+8 draft0.6B-n16@$(D06)+16 draft1.7B-n8@$(D17)+8 draft1.7B-n16@$(D17)+16 ngram-simple@--spec-type+ngram-simple
 .PHONY: bench-specdecode
 bench-specdecode: build ## draft-model and n-gram speculative decoding, one request at a time
 	@for s in $(SPEC); do \
-		tag=`echo $$s | cut -d'|' -f1`; flags=`echo $$s | cut -d'|' -f2 | tr _ ' '`; \
+		tag=`echo $$s | cut -d@ -f1`; flags=`echo $$s | cut -d@ -f2 | tr + ' '`; \
 		$(MAKE) --no-print-directory up MODEL=$(REF) NP=1 CTX=16384 EXTRA="$$flags" || exit 1; \
 		./bin/specdecode -tag $$tag -workers 1 -n 40 -max-tokens 512 -think=false || exit 1; \
 		./bin/specdecode -tag $$tag -workers 1 -n 15 -max-tokens 2048 -think=true -tasks gsm8k || exit 1; \
@@ -185,3 +182,6 @@ bench-cascade: build ## cheap model first, strong model (baseline answers) on lo
 		$(MAKE) --no-print-directory up SERVICES=llm2 MODEL2=$$m.gguf NP2=16 CTX2=65536 || exit 1; \
 		./bin/cascade -tag $$m -workers 16 || exit 1; \
 	done
+
+.PHONY: bench-gpu
+bench-gpu: bench-prefixcache bench-specdecode bench-kvcachequant bench-cascade bench-thinkingbudget bench-quantization ## all GPU benchmarks after the baseline, in order
