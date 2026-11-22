@@ -1,0 +1,10 @@
+benchmark,cached_tokens,completion_tokens,draft_acceptance,errors,latency_s,n,overhead_s,overhead_tokens,prompt_s,prompt_tokens,reasoning_tokens,score,source,tag,task,think,throughput_tokens_per_s,tokens_per_s,total_s,truncated,ttft_s,wall_s,workers
+tracecompress,3,71.67,0,0,5.687,6,0,0,0.2638,108.3,0,0.6667,output/tracecompress/cod/nothink,cod,gsm8k,false,54.59,13.01,5.687,0,0.3868,7.877,6
+tracecompress,3,162.8,0,0,13.64,6,0,0,0.5334,763.7,0,1,output/tracecompress/full/nothink,full,gsm8k,false,47.34,12.04,13.64,0,0.8763,20.64,6
+tracecompress,83,149.2,0,0,10.96,6,0,0,0.3408,314.8,0,1,output/tracecompress/head-150/nothink,head-150,gsm8k,false,53.53,13.38,10.96,0,0.4989,16.72,6
+tracecompress,67,142.8,0,0,11.05,6,0,0,0.2729,166.3,0,0.8333,output/tracecompress/head-50/nothink,head-50,gsm8k,false,55.24,13.14,11.05,0,0.6505,15.51,6
+tracecompress,2.5,140.3,0,0,7.387,6,0,0,0.2999,79.33,0,0.8333,output/tracecompress/none/nothink,none,gsm8k,false,67.58,22.25,7.387,0,0.3284,12.46,6
+tracecompress,7.333,87.83,0,0,6.451,6,4.812,765.2,0.1291,150.3,0,1,output/tracecompress/summary-30/nothink,summary-30,gsm8k,false,36.11,13.83,11.26,0,0.2528,14.59,6
+tracecompress,7.5,80.5,0,0,5.171,6,6.28,774.7,0.1187,159.8,0,1,output/tracecompress/summary-80/nothink,summary-80,gsm8k,false,32.23,15.54,11.45,0,0.2451,14.99,6
+tracecompress,68.33,134.5,0,0,8.597,6,0,0,0.3806,331.8,0,1,output/tracecompress/tail-150/nothink,tail-150,gsm8k,false,63.86,16.42,8.597,0,0.5718,12.64,6
+tracecompress,11.67,129.2,0,0,10.52,6,0,0,0.2673,182.3,0,1,output/tracecompress/tail-50/nothink,tail-50,gsm8k,false,53.23,12.45,10.52,0,0.5011,14.56,6

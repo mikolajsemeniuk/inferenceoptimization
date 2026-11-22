@@ -1,0 +1,7 @@
+benchmark,cached_tokens,completion_tokens,draft_acceptance,errors,latency_s,n,overhead_s,overhead_tokens,prompt_s,prompt_tokens,reasoning_tokens,score,source,tag,task,think,throughput_tokens_per_s,tokens_per_s,total_s,truncated,ttft_s,wall_s,workers
+thinkingbudget,81.88,174.9,0.4984,0,9.513,8,0,0,0.08734,84.12,0,0.75,output/thinkingbudget/budget-0/think,budget-0,gsm8k,true,91.9,18.37,9.513,0,0.133,15.22,8
+thinkingbudget,79.12,796.9,0.3613,0,84.14,8,0,0,0.05026,80.12,618.5,0.875,output/thinkingbudget/budget-1024/think,budget-1024,gsm8k,true,47.4,10.3,84.14,0,1.231,134.5,8
+thinkingbudget,79.12,273.4,0.354,0,19.28,8,0,0,0.03126,80.12,126.9,0.75,output/thinkingbudget/budget-128/think,budget-128,gsm8k,true,90.17,14.36,19.28,0,0.7386,24.25,8
+thinkingbudget,79.12,869.6,0.3487,0,92,8,0,0,0.05251,80.12,735.6,0.75,output/thinkingbudget/budget-2048/think,budget-2048,gsm8k,true,42.08,10.29,92,2,1.693,165.3,8
+thinkingbudget,79.12,407.2,0.3743,0,30.04,8,0,0,0.05738,80.12,253.9,0.875,output/thinkingbudget/budget-256/think,budget-256,gsm8k,true,89.62,13.76,30.04,0,0.8547,36.35,8
+thinkingbudget,79.12,584.2,0.3774,0,51.78,8,0,0,0.04668,80.12,439.5,0.875,output/thinkingbudget/budget-512/think,budget-512,gsm8k,true,68.03,11.92,51.78,0,1.096,68.71,8

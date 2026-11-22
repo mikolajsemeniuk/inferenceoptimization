@@ -1,0 +1,5 @@
+cached_tokens,file_mb,latency_s,mode,n,prompt_s,prompt_tokens,restore_s,save_s,score,source,task,ttft_plus_restore_s,ttft_s
+0,0,2.407,cold,3,0.9955,5366,0,0,0,output/prefixcache,longbench-2wikimqa,1.018,1.018
+0,0,1.859,nocache,3,0.9847,5393,0,0,0.06667,output/prefixcache,longbench-2wikimqa,1.004,1.004
+5343,0,0.916,warm,3,0.0507,5393,0,0,0.06667,output/prefixcache,longbench-2wikimqa,0.07417,0.07417
+5343,619.4,0.8878,restored,3,0.04873,5393,0.1749,0.9229,0.06667,output/prefixcache,longbench-2wikimqa,0.2425,0.06767

@@ -109,8 +109,8 @@ func Tau(s, tHat, gamma, varT, delta float64) float64 {
 func Policy(delta float64, rng *rand.Rand) (semanticcache.Decide, semanticcache.Learn) {
 	var observations [][]Observation // per cache entry
 	entry := func(i int) []Observation {
-		for len(observations) <= i {
-			observations = append(observations, nil)
+		for len(observations) <= i { // as in the original, every entry starts with two anchor observations
+			observations = append(observations, []Observation{{0, false}, {1, true}})
 		}
 		return observations[i]
 	}

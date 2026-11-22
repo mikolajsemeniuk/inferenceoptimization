@@ -110,12 +110,21 @@ bench-vcache: build ## vCache policy on the vCache benchmarks (no LLM needed)
 REASONING := gsm8k,math500,mmlu,mmlupro
 LONG      := longbench-hotpotqa,longbench-2wikimqa,longbench-musique
 REF       := Qwen3-8B-Q8_0.gguf
+# Thinking runs: Qwen3 often reasons for several thousand tokens, a 4096 cap truncated up to 40%
+# of MATH-500 answers. 12 slots x 21k context, generation cap 16384.
+THINK_UP  := NP=12 CTX=262144
+THINK_RUN := -workers 12 -max-tokens 16384
+
+.PHONY: bench-baseline-think
+bench-baseline-think: build ## only the thinking half of the baseline
+	$(MAKE) up MODEL=$(REF) $(THINK_UP)
+	./bin/baseline -tag Q8_0 $(THINK_RUN) -think=true -tasks $(REASONING)
 
 .PHONY: bench-baseline
 bench-baseline: build ## reference model without any optimization, thinking on and off
-	$(MAKE) up MODEL=$(REF) NP=16 CTX=131072
-	./bin/baseline -tag Q8_0 -workers 16 -think=true -tasks $(REASONING)
-	./bin/baseline -tag Q8_0 -workers 16 -think=false -tasks $(REASONING),cnndm
+	$(MAKE) up MODEL=$(REF) $(THINK_UP)
+	./bin/baseline -tag Q8_0 $(THINK_RUN) -think=true -tasks $(REASONING)
+	./bin/baseline -tag Q8_0 -workers 12 -think=false -tasks $(REASONING),cnndm
 	$(MAKE) up MODEL=$(REF) NP=4 CTX=131072
 	./bin/baseline -tag Q8_0-long -workers 4 -n 50 -think=false -tasks $(LONG)
 
@@ -133,7 +142,8 @@ bench-quantization: build ## Qwen3-8B at lower GGUF precisions (Q8_0 is the base
 	@for q in $(QUANTS); do \
 		$(MAKE) --no-print-directory up MODEL=Qwen3-8B-$$q.gguf NP=16 CTX=131072 || exit 1; \
 		./bin/quantization -tag $$q -workers 16 -think=false || exit 1; \
-		./bin/quantization -tag $$q -workers 16 -think=true -n 150 -tasks gsm8k,mmlupro || exit 1; \
+		$(MAKE) --no-print-directory up MODEL=Qwen3-8B-$$q.gguf $(THINK_UP) || exit 1; \
+		./bin/quantization -tag $$q $(THINK_RUN) -think=true -n 100 -tasks gsm8k,mmlupro || exit 1; \
 		$(MAKE) --no-print-directory info NAME=quantization TAG=$$q; \
 	done
 
@@ -172,8 +182,8 @@ bench-prefixcache: build ## prompt prefix reuse in memory and from disk
 
 .PHONY: bench-thinkingbudget
 bench-thinkingbudget: build ## fixed budgets, self-estimated budget, small-model router
-	$(MAKE) --no-print-directory up SERVICES="llm llm2" MODEL=$(REF) NP=16 CTX=131072 MODEL2=Qwen3-1.7B-Q8_0.gguf
-	./bin/thinkingbudget -workers 16
+	$(MAKE) --no-print-directory up SERVICES="llm llm2" MODEL=$(REF) $(THINK_UP) MODEL2=Qwen3-1.7B-Q8_0.gguf
+	./bin/thinkingbudget $(THINK_RUN)
 
 CHEAP ?= Qwen3-8B-Q3_K_M Qwen3-1.7B-Q8_0
 .PHONY: bench-cascade
@@ -197,8 +207,8 @@ bench-promptcompress: build ## extractive and small-LLM context compression on l
 
 .PHONY: bench-cachehint
 bench-cachehint: build ## cached neighbour used as an in-context hint and as a speculative draft
-	$(MAKE) --no-print-directory up SERVICES="llm embed" MODEL=$(REF) NP=16 CTX=131072
-	./bin/cachehint -tag plain -workers 16
+	$(MAKE) --no-print-directory up SERVICES="llm embed" MODEL=$(REF) $(THINK_UP)
+	./bin/cachehint -tag plain $(THINK_RUN)
 	$(MAKE) --no-print-directory up SERVICES="llm embed" MODEL=$(REF) NP=1 CTX=16384
 	./bin/cachehint -tag plain-1slot -workers 1 -n 40 -tasks gsm8k -modes nohint-nothink,hint-qa-nothink
 	$(MAKE) --no-print-directory up SERVICES="llm embed" MODEL=$(REF) NP=1 CTX=16384 EXTRA="--spec-type ngram-simple --spec-ngram-simple-size-n 4 --spec-ngram-simple-size-m 32"

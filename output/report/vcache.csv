@@ -1,0 +1,9 @@
+cache_size,dataset,delta,error_rate,f1,hit_rate,hits,llm_calls,missed_hits,policy,precision,recall,requests,reusable,seconds,source,wrong_hits
+2026,lmarena,0.005,0,0,0,0,3000,974,vcache,0,0,3000,974,1.084,output/vcache/lmarena,0
+2026,lmarena,0.01,0,0,0,0,3000,974,vcache,0,0,3000,974,0.9601,output/vcache/lmarena,0
+2025,lmarena,0.015,0.0003333,0,0.0003333,1,2999,974,vcache,0,0,3000,974,0.9841,output/vcache/lmarena,1
+2025,lmarena,0.02,0.0003333,0.002049,0.0006667,2,2998,973,vcache,0.5,0.001027,3000,974,0.9856,output/vcache/lmarena,1
+2024,lmarena,0.03,0.0006667,0.00409,0.001333,4,2996,972,vcache,0.5,0.002053,3000,974,1.079,output/vcache/lmarena,2
+2024,lmarena,0.05,0.001,0.01019,0.002667,8,2992,968,vcache,0.625,0.005139,3000,973,1.004,output/vcache/lmarena,3
+2023,lmarena,0.07,0.001333,0.01221,0.003333,10,2990,967,vcache,0.6,0.006166,3000,973,1.003,output/vcache/lmarena,4
+2020,lmarena,0.1,0.003,0.0182,0.006,18,2982,962,vcache,0.5,0.009269,3000,971,1.065,output/vcache/lmarena,9
