@@ -1,0 +1,200 @@
+[
+  {
+    "task": "gsm8k",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "cheap",
+    "n": 200,
+    "score": 0.845,
+    "escalation_rate": 0,
+    "mean_latency_s": 4.88981049501,
+    "mean_completion_tokens": 226.85,
+    "mean_strong_tokens": 0
+  },
+  {
+    "task": "gsm8k",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "strong",
+    "n": 200,
+    "score": 0.98,
+    "escalation_rate": 1,
+    "mean_latency_s": 115.01493262482005,
+    "mean_completion_tokens": 1717.755,
+    "mean_strong_tokens": 1717.755
+  },
+  {
+    "task": "gsm8k",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "consistency-2of3",
+    "n": 200,
+    "score": 0.905,
+    "escalation_rate": 0.065,
+    "mean_latency_s": 17.142310799540006,
+    "mean_completion_tokens": 852.35,
+    "mean_strong_tokens": 165.72
+  },
+  {
+    "task": "gsm8k",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "consistency-3of3",
+    "n": 200,
+    "score": 0.96,
+    "escalation_rate": 0.25,
+    "mean_latency_s": 48.15272577340002,
+    "mean_completion_tokens": 1322.835,
+    "mean_strong_tokens": 636.205
+  },
+  {
+    "task": "gsm8k",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "verify",
+    "n": 200,
+    "score": 0.845,
+    "escalation_rate": 0,
+    "mean_latency_s": 4.996883997955001,
+    "mean_completion_tokens": 228.85,
+    "mean_strong_tokens": 0
+  },
+  {
+    "task": "gsm8k",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "oracle",
+    "n": 200,
+    "score": 0.985,
+    "escalation_rate": 0.155,
+    "mean_latency_s": 29.358178640200013,
+    "mean_completion_tokens": 584.955,
+    "mean_strong_tokens": 358.105
+  },
+  {
+    "task": "mmlu",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "cheap",
+    "n": 200,
+    "score": 0.62,
+    "escalation_rate": 0,
+    "mean_latency_s": 2.4541766419049997,
+    "mean_completion_tokens": 93.985,
+    "mean_strong_tokens": 0
+  },
+  {
+    "task": "mmlu",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "strong",
+    "n": 200,
+    "score": 0.79,
+    "escalation_rate": 1,
+    "mean_latency_s": 124.33222637504002,
+    "mean_completion_tokens": 1659.07,
+    "mean_strong_tokens": 1659.07
+  },
+  {
+    "task": "mmlu",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "consistency-2of3",
+    "n": 200,
+    "score": 0.62,
+    "escalation_rate": 0.025,
+    "mean_latency_s": 13.736379147174999,
+    "mean_completion_tokens": 415.545,
+    "mean_strong_tokens": 126.945
+  },
+  {
+    "task": "mmlu",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "consistency-3of3",
+    "n": 200,
+    "score": 0.685,
+    "escalation_rate": 0.165,
+    "mean_latency_s": 35.970988939375,
+    "mean_completion_tokens": 714.945,
+    "mean_strong_tokens": 426.345
+  },
+  {
+    "task": "mmlu",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "verify",
+    "n": 200,
+    "score": 0.675,
+    "escalation_rate": 0.09,
+    "mean_latency_s": 24.71978707876,
+    "mean_completion_tokens": 374.03,
+    "mean_strong_tokens": 277.935
+  },
+  {
+    "task": "mmlu",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "oracle",
+    "n": 200,
+    "score": 0.875,
+    "escalation_rate": 0.38,
+    "mean_latency_s": 64.500837832475,
+    "mean_completion_tokens": 909.36,
+    "mean_strong_tokens": 815.375
+  },
+  {
+    "task": "mmlupro",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "cheap",
+    "n": 200,
+    "score": 0.415,
+    "escalation_rate": 0,
+    "mean_latency_s": 7.49115662071,
+    "mean_completion_tokens": 305.315,
+    "mean_strong_tokens": 0
+  },
+  {
+    "task": "mmlupro",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "strong",
+    "n": 200,
+    "score": 0.745,
+    "escalation_rate": 1,
+    "mean_latency_s": 277.74585485487506,
+    "mean_completion_tokens": 3358.695,
+    "mean_strong_tokens": 3358.695
+  },
+  {
+    "task": "mmlupro",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "consistency-2of3",
+    "n": 200,
+    "score": 0.485,
+    "escalation_rate": 0.115,
+    "mean_latency_s": 63.998965064404935,
+    "mean_completion_tokens": 1565.265,
+    "mean_strong_tokens": 653.775
+  },
+  {
+    "task": "mmlupro",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "consistency-3of3",
+    "n": 200,
+    "score": 0.61,
+    "escalation_rate": 0.405,
+    "mean_latency_s": 170.03074621178502,
+    "mean_completion_tokens": 2850.99,
+    "mean_strong_tokens": 1939.5
+  },
+  {
+    "task": "mmlupro",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "verify",
+    "n": 200,
+    "score": 0.485,
+    "escalation_rate": 0.14,
+    "mean_latency_s": 71.24378404415,
+    "mean_completion_tokens": 1051.335,
+    "mean_strong_tokens": 743.75
+  },
+  {
+    "task": "mmlupro",
+    "cheap": "Qwen3-1.7B-Q8_0",
+    "policy": "oracle",
+    "n": 200,
+    "score": 0.77,
+    "escalation_rate": 0.585,
+    "mean_latency_s": 206.39040704522003,
+    "mean_completion_tokens": 2675.21,
+    "mean_strong_tokens": 2369.895
+  }
+]

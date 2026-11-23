@@ -1,5 +1,13 @@
 cached_tokens,file_mb,latency_s,mode,n,prompt_s,prompt_tokens,restore_s,save_s,score,source,task,ttft_plus_restore_s,ttft_s
-0,0,2.407,cold,3,0.9955,5366,0,0,0,output/prefixcache,longbench-2wikimqa,1.018,1.018
-0,0,1.859,nocache,3,0.9847,5393,0,0,0.06667,output/prefixcache,longbench-2wikimqa,1.004,1.004
-5343,0,0.916,warm,3,0.0507,5393,0,0,0.06667,output/prefixcache,longbench-2wikimqa,0.07417,0.07417
-5343,619.4,0.8878,restored,3,0.04873,5393,0.1749,0.9229,0.06667,output/prefixcache,longbench-2wikimqa,0.2425,0.06767
+0,0,6.162,cold,30,5.311,1.348e+04,0,0,0,output/prefixcache,longbench-hotpotqa,5.338,5.338
+0,0,5.56,nocache,30,5.323,1.351e+04,0,0,0.6468,output/prefixcache,longbench-hotpotqa,5.35,5.35
+1.346e+04,0,0.3547,warm,30,0.06589,1.351e+04,0,0,0.661,output/prefixcache,longbench-hotpotqa,0.09233,0.09233
+1.346e+04,1991,0.355,restored,30,0.06586,1.351e+04,0.1644,1.531,0.661,output/prefixcache,longbench-hotpotqa,0.2568,0.09236
+0,0,3.941,cold,30,2.967,8105,0,0,0,output/prefixcache,longbench-2wikimqa,2.986,2.986
+0,0,3.278,nocache,30,2.966,8134,0,0,0.3572,output/prefixcache,longbench-2wikimqa,2.985,2.985
+8082,0,0.369,warm,30,0.05971,8134,0,0,0.3572,output/prefixcache,longbench-2wikimqa,0.07863,0.07863
+8082,1199,0.3688,restored,30,0.05993,8134,0.1044,0.8569,0.3572,output/prefixcache,longbench-2wikimqa,0.1829,0.0785
+0,0,7.59,cold,30,6.618,1.636e+04,0,0,0,output/prefixcache,longbench-musique,6.653,6.653
+0,0,7.096,nocache,30,6.647,1.639e+04,0,0,0.3793,output/prefixcache,longbench-musique,6.683,6.683
+1.634e+04,0,0.5419,warm,30,0.06978,1.639e+04,0,0,0.346,output/prefixcache,longbench-musique,0.104,0.104
+1.634e+04,2415,0.5422,restored,30,0.06975,1.639e+04,0.2017,1.669,0.346,output/prefixcache,longbench-musique,0.306,0.1043

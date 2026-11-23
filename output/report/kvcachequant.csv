@@ -1,0 +1,7 @@
+benchmark,cached_tokens,completion_tokens,draft_acceptance,errors,latency_s,n,overhead_s,overhead_tokens,prompt_s,prompt_tokens,reasoning_tokens,score,source,tag,task,think,throughput_tokens_per_s,tokens_per_s,total_s,truncated,ttft_s,wall_s,workers
+kvcachequant,3.02,241.8,0,0,9.767,100,0,0,0.12,91.81,0,0.95,output/kvcachequant/f16/nothink,f16,gsm8k,false,97.05,25.42,9.767,0,0.2814,249.1,4
+kvcachequant,3.51,253.5,0,0,10.75,100,0,0,0.1281,124.1,0,0.72,output/kvcachequant/f16/nothink,f16,mmlu,false,91.14,24.26,10.75,1,0.1925,278.1,4
+kvcachequant,3.01,245.1,0,0,10.06,100,0,0,0.1232,91.81,0,0.93,output/kvcachequant/q4_0/nothink,q4_0,gsm8k,false,95.74,25.01,10.06,0,0.2197,256,4
+kvcachequant,3.96,211.2,0,0,8.811,100,0,0,0.1317,124.1,0,0.73,output/kvcachequant/q4_0/nothink,q4_0,mmlu,false,90.88,24.76,8.811,0,0.2057,232.4,4
+kvcachequant,3.02,237.5,0,0,9.754,100,0,0,0.1251,91.81,0,0.95,output/kvcachequant/q8_0/nothink,q8_0,gsm8k,false,95.4,24.97,9.754,0,0.2367,248.9,4
+kvcachequant,3.97,316.5,0,0,13.01,100,0,0,0.133,124.1,0,0.72,output/kvcachequant/q8_0/nothink,q8_0,mmlu,false,80.55,24.59,13.01,2,0.2079,392.9,4
