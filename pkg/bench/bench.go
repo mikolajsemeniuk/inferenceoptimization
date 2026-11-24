@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"maps"
+	"slices"
 	"strings"
 	"time"
 
@@ -33,6 +34,8 @@ type Config struct {
 	Extra     map[string]any // extra request options
 	// Ask overrides how one example is answered (nil = a single plain request, see Ask).
 	Ask func(context.Context, Config, dataset.Example) Row
+	// Keep drops sampled examples a benchmark cannot use (nil = keep all).
+	Keep func(dataset.Example) bool
 }
 
 // Flags reads the common command line flags, starting from the given defaults.
@@ -175,7 +178,11 @@ func Run(c Config) []Summary {
 		if err != nil {
 			log.Fatal(err)
 		}
-		summaries = append(summaries, RunExamples(c, task, dataset.Sample(examples, c.N, c.Seed)))
+		examples = dataset.Sample(examples, c.N, c.Seed)
+		if c.Keep != nil {
+			examples = slices.DeleteFunc(examples, func(e dataset.Example) bool { return !c.Keep(e) })
+		}
+		summaries = append(summaries, RunExamples(c, task, examples))
 		if err := output.JSON(Dir(c)+"summary.json", summaries); err != nil {
 			log.Fatal(err)
 		}

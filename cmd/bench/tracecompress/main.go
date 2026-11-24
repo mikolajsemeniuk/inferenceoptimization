@@ -36,6 +36,7 @@ func main() {
 		}
 	}
 	fmt.Println("traces loaded:", len(traces))
+	c.Keep = func(e dataset.Example) bool { _, ok := traces[e.ID]; return ok } // baseline truncated: no usable trace
 
 	type method func(ctx context.Context, e dataset.Example) (prompt string, seconds float64, tokens int)
 	keep := func(f func(string) string) method {
@@ -68,9 +69,6 @@ func main() {
 	for _, m := range methods {
 		c.Tag = m.name
 		c.Ask = func(ctx context.Context, c bench.Config, e dataset.Example) bench.Row {
-			if _, ok := traces[e.ID]; !ok { // baseline was truncated: no usable trace
-				return bench.Row{Example: e, Tag: c.Tag, Error: "no trace"}
-			}
 			prompt, seconds, tokens := m.f(ctx, e)
 			words := len(strings.Fields(prompt)) - len(strings.Fields(e.Prompt))
 			e.Prompt = prompt

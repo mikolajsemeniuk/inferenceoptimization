@@ -182,7 +182,7 @@ bench-prefixcache: build ## prompt prefix reuse in memory and from disk
 
 .PHONY: bench-thinkingbudget
 bench-thinkingbudget: build ## fixed budgets, self-estimated budget, small-model router
-	$(MAKE) --no-print-directory up SERVICES="llm llm2" MODEL=$(REF) $(THINK_UP) MODEL2=Qwen3-1.7B-Q8_0.gguf
+	$(MAKE) --no-print-directory up MODEL=$(REF) $(THINK_UP)
 	./bin/thinkingbudget $(THINK_RUN)
 
 CHEAP ?= Qwen3-8B-Q3_K_M Qwen3-1.7B-Q8_0
@@ -198,8 +198,8 @@ bench-gpu: bench-prefixcache bench-specdecode bench-kvcachequant bench-cascade b
 
 .PHONY: bench-tracecompress bench-promptcompress
 bench-tracecompress: build ## how much of a reasoning trace must be kept for it to stay useful
-	$(MAKE) --no-print-directory up SERVICES="llm llm2" MODEL=$(REF) NP=16 CTX=131072 MODEL2=Qwen3-1.7B-Q8_0.gguf
-	./bin/tracecompress -workers 16 -max-tokens 1024
+	$(MAKE) --no-print-directory up SERVICES="llm llm2" MODEL=$(REF) NP=8 CTX=262144 MODEL2=Qwen3-1.7B-Q8_0.gguf NP2=8 CTX2=262144
+	./bin/tracecompress -workers 8 -max-tokens 4096
 
 bench-promptcompress: build ## extractive and small-LLM context compression on long-context QA
 	$(MAKE) --no-print-directory up SERVICES="llm llm2 embed" MODEL=$(REF) NP=4 CTX=131072 MODEL2=Qwen3-1.7B-Q8_0.gguf NP2=2 CTX2=65536
